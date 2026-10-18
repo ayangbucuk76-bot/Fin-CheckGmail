@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netnit Fast Check Email</title>
+    <!-- Bootstrap 5 CSS untuk Tampilan Modern -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        pre {
+            background-color: #212529;
+            color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                
+                <!-- Judul / Header -->
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold text-primary">Netnit Email Checker</h2>
+                    <p class="text-muted">Masukkan daftar email untuk dicek secara massal melalui API Netnit</p>
+                </div>
+
+                <!-- Input Card -->
+                <div class="card p-4 mb-4">
+                    <div class="mb-3">
+                        <label for="emailInput" class="form-label fw-semibold">Daftar Email (Satu email per baris):</label>
+                        <textarea class="form-control" id="emailInput" rows="5" placeholder="example@gmail.com&#10;test.user@gmail.com"></textarea>
+                    </div>
+                    <button class="btn btn-primary w-100 fw-bold py-2" id="btnCheck">
+                        <span id="btnText">Periksa Email</span>
+                        <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+
+                <!-- Result Card -->
+                <div class="card p-4 d-none" id="resultCard">
+                    <h5 class="fw-semibold mb-3">Hasil Respon API:</h5>
+                    <pre><code id="jsonResult">Waiting...</code></pre>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logika Utama -->
+    <script>
+        document.getElementById('btnCheck').addEventListener('click', function() {
+            const emailInput = document.getElementById('emailInput').value.trim();
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const btnCheck = document.getElementById('btnCheck');
+            const resultCard = document.getElementById('resultCard');
+            const jsonResult = document.getElementById('jsonResult');
+
+            if (!emailInput) {
+                alert('Silakan masukkan minimal satu email terlebih dahulu!');
+                return;
+            }
+
+            // Memisahkan input teks per baris menjadi Array, membuang baris kosong
+            const emails = emailInput.split('\n')
+                                    .map(email => email.trim())
+                                    .filter(email => email.length > 0);
+
+            // Efek Loading pada Tombol
+            btnText.innerText = "Sedang Memeriksa...";
+            btnSpinner.classList.remove('d-none');
+            btnCheck.disabled = true;
+            resultCard.classList.add('d-none');
+
+            // Eksekusi Fetch API menggunakan data Anda
+            fetch("https://apikey.netnit.net/fastcheck", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer netnit_nAMbdSicDEUwJml8TxEUkNT1aeD1LVP0"
+                },
+                body: JSON.stringify({ mail: emails })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                // Tampilkan hasil respon JSON yang rapi di halaman web
+                jsonResult.textContent = JSON.stringify(data, null, 2);
+                resultCard.classList.remove('d-none');
+            })
+            .catch(err => {
+                // Tangani jika terjadi error koneksi / API
+                jsonResult.textContent = `Error: ${err.message}\nPastikan API Key aktif dan mengizinkan CORS (Cross-Origin Resource Sharing).`;
+                resultCard.classList.remove('d-none');
+                console.error(err);
+            })
+            .finally(() => {
+                // Kembalikan tombol ke status semula
+                btnText.innerText = "Periksa Email";
+                btnSpinner.classList.add('d-none');
+                btnCheck.disabled = false;
+            });
+        });
+    </script>
+
+</body>
+</html>
